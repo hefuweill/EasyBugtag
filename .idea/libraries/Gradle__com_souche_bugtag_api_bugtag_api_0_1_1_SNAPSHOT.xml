@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: com.souche.bugtag.api:bugtag-api:0.1.1-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.souche.bugtag.api/bugtag-api/0.1.1-SNAPSHOT/6403e6bdb8a31d037c4cf555098bd8623ef60939/bugtag-api-0.1.1-SNAPSHOT.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.souche.bugtag.api/bugtag-api/0.1.1-SNAPSHOT/d117b3c5a63628b2edc1164ca0ca85a93ed0f128/bugtag-api-0.1.1-SNAPSHOT-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

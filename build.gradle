@@ -1,0 +1,57 @@
+plugins {
+    id 'org.jetbrains.intellij' version '0.2.17'
+}
+
+group 'com.souche.bugtag.plugin'
+
+apply plugin: 'java'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+    jcenter()
+    maven { url 'https://repo.souche-inc.com/repository/public/' }
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    compile 'com.souche.bugtag.api:bugtag-api:0.1.1-SNAPSHOT'
+    compile 'com.squareup.retrofit2:retrofit:2.3.0'
+    compile 'com.squareup.retrofit2:converter-gson:2.3.0'
+    compile 'com.squareup.okhttp3:okhttp:3.2.0'
+    compile 'com.squareup.okio:okio:1.7.0'
+    compile 'com.squareup.okhttp3:logging-interceptor:3.5.0'
+    compile 'com.google.code.gson:gson:2.6.2'
+}
+
+jar {
+    manifest {
+        attributes "Main-Class": ""
+    }
+
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+intellij {
+    // updateSinceUntilBuild true 当设置为true时plugin.xml里面的sinceBuild和untilBuild将不生效,变为使用patchPluginXml里面指定的内容 默认为true
+    pluginName 'SoucheBugtag'
+    localPath '/home/hefuwei/下载/idea-IU-173.3727.127'
+    patchPluginXml{
+        sinceBuild '162.*'
+        untilBuild '173.*'
+    }
+    alternativeIdePath '/home/hefuwei/androidStudio/android-studio' //用于配置用哪个Idea调试plugin,如果不配置默认使用当前的idea进行调试
+}
+publishPlugin {
+    username 'hfw'
+    password 'hfw'
+}
+patchPluginXml {
+    changeNotes "添加了排序方式"
+    version '0.0.1'
+}
+
+version patchPluginXml.version//放在patchPlugin后面才会生效  会在生成的jar包文件名后面添加上该字段

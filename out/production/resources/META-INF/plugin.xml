@@ -1,0 +1,22 @@
+<idea-plugin>
+    <id>com.souche.bugtag.plugin.bugtag</id>
+    <name>soucheBugtag</name>
+    <version>0.0.1</version>
+    <vendor email="support@yourcompany.com" url="http://www.yourcompany.com">YourCompany</vendor>
+
+    <description><![CDATA[
+    Enter short description for your plugin here.<br>
+    <em>most HTML tags may be used</em>
+    ]]></description>
+    <idea-version since-build="162.3871" until-build="173.*"/>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="StackTrace" icon="/icon.png" anchor="bottom" canCloseContents="true" factoryClass="com.souche.bugtag.StackTraceCompute" secondary="false"/>
+        <toolWindow id="SimpleBugtag" icon="/icon.png" anchor="bottom" canCloseContents="true" factoryClass="com.souche.bugtag.ToolFactoryCompute" secondary="false"/>
+        <applicationConfigurable instance="com.souche.bugtag.Setting"/>
+    </extensions>
+
+    <actions>
+        <!-- Add your actions here -->
+    </actions>
+</idea-plugin>
