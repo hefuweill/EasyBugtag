@@ -49,7 +49,12 @@ public class MyCellRender<T>  extends DefaultListCellRenderer{
         pane_time.setText(info.tags.get(0).created_at+"/"+info.tags.get(0).updated_at);
         pane_info.setText("跟踪人:"+info.tags.get(0).dev_user.nickname + " 次数:"+info.crash_num+" 机型:"+info.device_num
         +" 用户"+info.model_num + " 版本:"+info.tags.get(0).version_name);
-        pane_desc.setText(info.tags.get(0).description);
+        pane_desc.setContentType("text/html");
+        if(info.succ_num.equals("1")){
+            pane_desc.setText("<span style='text-decoration:line-through;color:gray'>"+info.tags.get(0).description+"</span>");
+        }else{
+            pane_desc.setText("<font color:blue>"+info.tags.get(0).description+"</font>");
+        }
         panel_first.add(pane_descError);
         panel_first.add(pane_time);
         panel_first.add(pane_info);

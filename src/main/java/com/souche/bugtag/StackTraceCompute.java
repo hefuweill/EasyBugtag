@@ -10,6 +10,8 @@ import com.intellij.ui.content.ContentManagerEvent;
 import com.intellij.ui.content.ContentManagerListener;
 import com.souche.bugtag.api.model.*;
 import com.souche.bugtag.api.service.APIManager;
+import com.souche.bugtag.utils.OpenFileUtils;
+import com.souche.bugtag.utils.SourceDetail;
 import okhttp3.Request;
 import org.apache.commons.collections.map.LRUMap;
 import org.jetbrains.annotations.NotNull;

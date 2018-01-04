@@ -1,4 +1,4 @@
-package com.souche.bugtag;
+package com.souche.bugtag.utils;
 
 public class SourceDetail {
     public String fileName = null;

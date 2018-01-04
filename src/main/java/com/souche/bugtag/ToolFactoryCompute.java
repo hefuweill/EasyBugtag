@@ -11,6 +11,7 @@ import com.intellij.ui.content.ContentManagerEvent;
 import com.intellij.ui.content.ContentManagerListener;
 import com.souche.bugtag.api.model.*;
 import com.souche.bugtag.api.service.APIManager;
+import com.souche.bugtag.utils.SettingUtils;
 import org.jetbrains.annotations.NotNull;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -18,7 +19,6 @@ import retrofit2.Response;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -108,13 +108,19 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
             Call<BaseMessage<NewVersion>> call = APIManager.getInstance().getPluginAPI().checkNewVersion("{}");
             Response<BaseMessage<NewVersion>> resp = call.execute();
             if(resp.isSuccessful()) {
-                int index = Messages.showDialog(resp.body().data.desc, "Info", new String[]{"取消", "去更新"}, 1, null);
-                if(index == 1){
+                String savedVersionName = SettingUtils.getInstance().getVersion();
+                if(resp.body().data.versionName.equals(savedVersionName)){
+                    return ;
+                }
+                int index = Messages.showDialog(resp.body().data.desc, resp.body().data.title, new String[]{"取消","跳过该版本","去更新"}, 2, null);
+                if(index == 2){
                     try {
                         Desktop.getDesktop().browse(new URL(resp.body().data.url).toURI());
                     } catch (URISyntaxException e) {
                         e.printStackTrace();
                     }
+                }else if(index == 1){
+                    SettingUtils.getInstance().saveVersion(resp.body().data.versionName);
                 }
             }
         } catch (IOException e) {

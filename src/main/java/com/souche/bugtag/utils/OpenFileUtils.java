@@ -1,5 +1,5 @@
 
-package com.souche.bugtag;
+package com.souche.bugtag.utils;
 
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
