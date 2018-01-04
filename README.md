@@ -1,15 +1,15 @@
 ## BugTag插件设置说明
    1. 下载dist目录下面的jar包如(bugtag-0.0.1.jar)
    2. 获取你的Bugtag账号的cookie
-   	  (1)在bugtag官网上登录你的账号
-      (2)按F12打开开发者选项切换到Network tab
+    - 在bugtag官网上登录你的账号
+    - 按F12打开开发者选项切换到Network tab
       ![Network tab](mdres/networkimg.png)
-      (3)按F5刷新下网页
-      (4)寻找请求头中包含cookie属性的请求
+    - 按F5刷新下网页
+    - 寻找请求头中包含cookie属性的请求
       ![cookie](mdres/cookieimg.png)
    3. 打开Android Studio 选中File下面的Setting 如下图所示
-   ![进入设置](mdres/gtsetting.png)
    4. 选择Bugtag选项如下图所示
+   ![进入设置](mdres/gtsetting.png)
    ![进入设置](mdres/bugtagsetting.png)
    5. 在右侧输入你自己的Bugtag账号的cookie,点击确定
    ![设置界面](mdres/settingimg.png)
