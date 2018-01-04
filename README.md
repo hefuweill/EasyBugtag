@@ -1,4 +1,4 @@
-## BugTag插件设置说明
+## Bugtag插件设置说明
    1. 下载dist目录下面的jar包如(bugtag-0.0.1.jar)
    2. 获取你的Bugtag账号的cookie
     - 在bugtag官网上登录你的账号
@@ -16,7 +16,7 @@
    6. 打开simpleBugtag tab
    ![simpleBugtag](mdres/simpleBugtag.png)
 
-## BugTag插件使用说明
+## Bugtag插件使用说明
    1. 在simpleBugtag界面点击checkbox可以进行标签类型和标签状态的筛选,点击下拉列表可以进行排序
    2. 最上方的beta和live用于切换环境,beta代表测试环境,live代表线上环境
    3. 点击右下角的<>用于分页查看
