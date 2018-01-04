@@ -10,11 +10,18 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
 
 public class Setting implements Configurable {
 
     private JPanel mPanel;
     private JTextArea mTv;
+    private JLabel mLb;
     private boolean isModify;
     private String mSavedCookie;
     private static OnSettingApplyListener mListener;
@@ -32,6 +39,19 @@ public class Setting implements Configurable {
     @Override
     public JComponent createComponent() {
         mSavedCookie = SettingUtils.getInstance().getCookie();
+        mLb.setForeground(Color.blue);
+        mLb.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                try {
+                    mLb.setForeground(Color.black);
+                    Desktop.getDesktop().browse(new URL("http://git.souche.com/hefuwei/bugtagPlugin/issues").toURI());
+                } catch (Exception e1) {
+                    e1.printStackTrace();
+                }
+            }
+        });
+
         mTv.setLineWrap(true);        //激活自动换行功能
         mTv.setWrapStyleWord(true);
         mTv.setText(mSavedCookie);
@@ -78,6 +98,4 @@ public class Setting implements Configurable {
         }
     }
 
-    private void createUIComponents() {
-    }
 }
