@@ -78,6 +78,7 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
     private String sortType[] = {"created_at","updated_at","priority","crash_num","model_num","device_num"};
     private int currentSortType = 0;
     private boolean isSearch = false;
+    private List<IssueInfo> mIssueInfos;
 
 
     @Override
@@ -367,46 +368,21 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
         }
     }
 
-    private void initIssusInfos(List<IssueInfo> issueInfos, BugtagAPP app){
+    private void initIssusInfos(BugtagAPP app){
         isNeedJump = false;
+        mList.removeMouseListener(mouseAdapter);
         mList.setModel(new AbstractListModel() {
             @Override
             public int getSize() {
-                return issueInfos.size();
+                return mIssueInfos.size();
             }
 
             @Override
             public IssueInfo getElementAt(int index) {
-                return issueInfos.get(index);
+                return mIssueInfos.get(index);
             }
         });
-        mList.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
-                    JList list = (JList) e.getSource();
-                    int index = list.getLeadSelectionIndex();
-                    if (preIndex == index) {
-                        return;
-                    }
-                    myToolWindow.hide(null);
-                    ToolWindow toolWindow = ToolWindowManager.getInstance(mProject).getToolWindow("Info");
-                    boolean flag = toolWindow instanceof StackTraceCompute;
-                    System.out.println(flag);
-                    toolWindow.show(new Runnable() {
-                        @Override
-                        public void run() {
-                            IssueInfo info = issueInfos.get(index);
-                            if (mListener != null && mListener instanceof StackTraceCompute) {
-                                mListener.onShowText(manager, info, app.app_id);
-                            }
-                        }
-                    });
-                    preIndex = index;
-                }
-            }
-        });
-
+        mList.addMouseListener(mouseAdapter);
         mList.setCellRenderer(new MyCellRender());
         isNeedJump = true;
     }
@@ -478,11 +454,12 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
             BaseMessage<PageInfo<IssueInfo>> body = response.body();
             if(body!=null){
                 if(body.isSuccess()){
-                    List<IssueInfo> issusInfos = body.getData().list;
-                    if(issusInfos == null){
-                        issusInfos = new ArrayList<>();
+                    if(mIssueInfos == null){
+                        mIssueInfos = new ArrayList<>();
                     }
-                    initIssusInfos(issusInfos,currentBugtagApp);
+                    mIssueInfos.clear();
+                    mIssueInfos.addAll(body.getData().list);
+                    initIssusInfos(currentBugtagApp);
                 }
             }
         }
@@ -505,4 +482,30 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
             e.printStackTrace();
         }
     }
+
+    private MouseAdapter mouseAdapter = new MouseAdapter() {
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            if (e.getClickCount() == 2) {
+                JList list = (JList) e.getSource();
+                int index = list.getLeadSelectionIndex();
+                if (preIndex == index) {
+                    return;
+                }
+                myToolWindow.hide(null);
+                ToolWindow toolWindow = ToolWindowManager.getInstance(mProject).getToolWindow("Info");
+                boolean flag = toolWindow instanceof StackTraceCompute;
+                toolWindow.show(new Runnable() {
+                    @Override
+                    public void run() {
+                        IssueInfo info = mIssueInfos.get(index);
+                        if (mListener != null && mListener instanceof StackTraceCompute) {
+                            mListener.onShowText(manager, info, currentBugtagApp.app_id);
+                        }
+                    }
+                });
+                preIndex = index;
+            }
+        }
+    };
 }
