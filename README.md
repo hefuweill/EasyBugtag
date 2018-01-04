@@ -8,9 +8,7 @@
     - 寻找请求头中包含cookie属性的请求
       ![cookie](mdres/cookieimg.png)
    3. 打开Android Studio 选中File下面的Setting 如下图所示
-   4. 选择Bugtag选项如下图所示
-   ![进入设置](mdres/gtsetting.png)
-   ![进入设置](mdres/bugtagsetting.png)
+   4. 选择Bugtag选项如图所示
    5. 在右侧输入你自己的Bugtag账号的cookie,点击确定
    ![设置界面](mdres/settingimg.png)
    6. 打开simpleBugtag tab

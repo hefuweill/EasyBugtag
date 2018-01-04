@@ -108,19 +108,21 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
             Call<BaseMessage<NewVersion>> call = APIManager.getInstance().getPluginAPI().checkNewVersion("{}");
             Response<BaseMessage<NewVersion>> resp = call.execute();
             if(resp.isSuccessful()) {
-                String savedVersionName = SettingUtils.getInstance().getVersion();
-                if(resp.body().data.versionName.equals(savedVersionName)){
-                    return ;
-                }
-                int index = Messages.showDialog(resp.body().data.desc, resp.body().data.title, new String[]{"取消","跳过该版本","去更新"}, 2, null);
-                if(index == 2){
-                    try {
-                        Desktop.getDesktop().browse(new URL(resp.body().data.url).toURI());
-                    } catch (URISyntaxException e) {
-                        e.printStackTrace();
+                if(!version.equals(resp.body().data.versionName)){
+                    String savedVersionName = SettingUtils.getInstance().getVersion();
+                    if(resp.body().data.versionName.equals(savedVersionName)){
+                        return ;
                     }
-                }else if(index == 1){
-                    SettingUtils.getInstance().saveVersion(resp.body().data.versionName);
+                    int index = Messages.showDialog(resp.body().data.desc, resp.body().data.title, new String[]{"取消","跳过该版本","去更新"}, 2, null);
+                    if(index == 2){
+                        try {
+                            Desktop.getDesktop().browse(new URL(resp.body().data.url).toURI());
+                        } catch (URISyntaxException e) {
+                            e.printStackTrace();
+                        }
+                    }else if(index == 1){
+                        SettingUtils.getInstance().saveVersion(resp.body().data.versionName);
+                    }
                 }
             }
         } catch (IOException e) {
