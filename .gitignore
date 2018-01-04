@@ -16,6 +16,7 @@
 # Gradle files
 .gradle/
 build/
+out/
 */build/
 gradlew
 gradlew.bat
