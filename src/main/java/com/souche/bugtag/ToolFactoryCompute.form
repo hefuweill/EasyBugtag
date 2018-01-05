@@ -91,7 +91,7 @@
           <component id="c9cb6" class="javax.swing.JLabel">
             <constraints/>
             <properties>
-              <text value="标签类型:"/>
+              <text value="类型:"/>
             </properties>
           </component>
           <component id="81d02" class="javax.swing.JCheckBox" binding="mCb_bengkui">
@@ -118,7 +118,7 @@
           <component id="64a99" class="javax.swing.JLabel">
             <constraints/>
             <properties>
-              <text value="标签状态:"/>
+              <text value="状态:"/>
             </properties>
           </component>
           <component id="1f1cf" class="javax.swing.JCheckBox" binding="mCb_new">
@@ -168,7 +168,7 @@
           <component id="31391" class="javax.swing.JLabel">
             <constraints/>
             <properties>
-              <text value="版本号:"/>
+              <text value="版本:"/>
             </properties>
           </component>
           <component id="62249" class="javax.swing.JComboBox" binding="mCb">
@@ -182,6 +182,16 @@
             </properties>
           </component>
           <component id="7b1c1" class="javax.swing.JComboBox" binding="mCb_sort">
+            <constraints/>
+            <properties/>
+          </component>
+          <component id="6448d" class="javax.swing.JLabel">
+            <constraints/>
+            <properties>
+              <text value="项目:"/>
+            </properties>
+          </component>
+          <component id="f0a81" class="javax.swing.JComboBox" binding="mCb_project">
             <constraints/>
             <properties/>
           </component>

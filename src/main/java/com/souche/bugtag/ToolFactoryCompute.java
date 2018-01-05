@@ -46,6 +46,7 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
     private JCheckBox mCb_close;
     private JComboBox mCb;
     private JComboBox mCb_sort;
+    private JComboBox mCb_project;
     private APIManager manager;
     private Project mProject;
     private static OnShowTextListener mListener;
@@ -79,6 +80,8 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
     private int currentSortType = 0;
     private boolean isSearch = false;
     private List<IssueInfo> mIssueInfos;
+    private List<List<BugtagAPP>> projects;
+    private boolean isInitComponent = false;//初始化组件屏蔽事件响应
 
 
     @Override
@@ -140,7 +143,8 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
                 BaseMessage<List<BugtagAPP>> body = response.body();
                 if(body!=null){
                     if(body.isSuccess()){
-                        initTab(body);
+                        packProject(body);
+                        initTab(0);
                     }
                     else{
                         cookieNotRight(null);
@@ -156,6 +160,7 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
         }catch (Exception e){
             cookieNotRight("未知错误");
             e.printStackTrace();
+            System.out.println(e.getMessage());
         }
     }
 
@@ -203,21 +208,26 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
         mCb_sort.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if(!isInitComponent) {
                     currentSortType = mCb_sort.getSelectedIndex();
                     currentPage = 1;
                     mBt_left.setEnabled(false);
                     mBt_right.setEnabled(true);
-                    if(currentSortType >= 3){
+                    if (currentSortType >= 3) {
                         isSearch = true;
-                    }else{
+                    } else {
                         isSearch = false;
                     }
                     loadPage();
+                }
             }
         });
         mCb.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if(isInitComponent){
+                   return ;
+                }
                 if(map!=null){
                     if(versions == null){
                         versions = new ArrayList<>();
@@ -234,6 +244,17 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
                     mBt_right.setEnabled(true);
                     loadPage();
                 }
+            }
+        });
+        mCb_project.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                currentBugtagApp = projects.get(mCb_project.getSelectedIndex()).get(0);
+                myToolWindow.getContentManager().removeContentManagerListener(listener);
+                myToolWindow.getContentManager().removeAllContents(true);
+                System.out.println("执行");
+                initComponent();
+                initTab(mCb_project.getSelectedIndex());
             }
         });
         mCb_exception.addItemListener(this);
@@ -255,17 +276,17 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
         Messages.showMessageDialog(mProject, info, "Information", Messages.getInformationIcon());
         myToolWindow.getContentManager().removeAllContents(true);
     }
-    private void initTab(BaseMessage<List<BugtagAPP>> body){
-        currentBugtagApp = body.getData().get(0);
+    private void initTab(int index){
+        currentBugtagApp = projects.get(index).get(0);
         String actionName = "";
-        for (int i=0;i<body.getData().size();i++){
+        for (int i=0;i<projects.get(index).size();i++){
             ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
             if(i == 0){
                 actionName = BETA;
-                app_beta = body.getData().get(0);
+                app_beta = projects.get(index).get(i);
             }else{
                 actionName = LIVE;
-                app_live = body.getData().get(i);
+                app_live = projects.get(index).get(i);
             }
             Content content = contentFactory.createContent(mSpanel, actionName, false);
             myToolWindow.getContentManager().addContent(content);
@@ -273,37 +294,31 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
         loadPage();
         loadVersion();
         loadTotalCount();
-        myToolWindow.getContentManager().addContentManagerListener(new ContentManagerListener() {
-            @Override
-            public void contentAdded(ContentManagerEvent contentManagerEvent) {
-            }
+        myToolWindow.getContentManager().addContentManagerListener(listener);
+    }
 
-            @Override
-            public void contentRemoved(ContentManagerEvent contentManagerEvent) {
-            }
-
-            @Override
-            public void contentRemoveQuery(ContentManagerEvent contentManagerEvent) {
-            }
-
-            @Override
-            public void selectionChanged(ContentManagerEvent contentManagerEvent) {
-                Content content = contentManagerEvent.getContent();
-                if(content.getDisplayName().equals(currentContent)){
-                    return ;
+    private void packProject(BaseMessage<List<BugtagAPP>> body) {
+        projects = new ArrayList<>();
+        List<String> alreadyProjectName = new ArrayList<>();
+        for(BugtagAPP app:body.data){
+            if(alreadyProjectName.contains(app.name)){
+                continue ;
+            }else{
+                alreadyProjectName.add(app.name);
+                List<BugtagAPP> apps = new ArrayList<>();
+                apps.add(app);
+                if(app.sub_apps!=null&&app.sub_apps.size()>0){
+                    apps.add(app.sub_apps.get(0));
                 }
-                currentContent = content.getDisplayName();
-                if(content.getDisplayName().equals(BETA)){
-                    currentBugtagApp = app_beta;
-                }else{
-                    currentBugtagApp = app_live;
-                }
-                initComponent();
+                projects.add(apps);
             }
-        });
+        }
+        Vector<String> vector = new Vector<>(alreadyProjectName);
+        mCb_project.setModel(new DefaultComboBoxModel(vector));
     }
 
     private void initComponent() {
+        isInitComponent = true;
         clearList();
         versions.clear();
         isSearch = false;
@@ -317,11 +332,12 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
         mCb_suspension.setSelected(false);
         mCb_reopen.setSelected(false);
         mCb_ongoing.setSelected(false);
+        mCb_sort.setSelectedIndex(0);
+        mCb.setSelectedIndex(0);
         currentPage = 1;
         mEt_desc.setText("");
-        currentSortType = 1;
-        loadPage();
-        loadVersion();
+        currentSortType = 0;
+        isInitComponent = false;
     }
 
     private void loadVersion() {
@@ -514,6 +530,37 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
                 });
                 preIndex = index;
             }
+        }
+    };
+
+    private ContentManagerListener listener = new ContentManagerListener() {
+        @Override
+        public void contentAdded(ContentManagerEvent contentManagerEvent) {
+        }
+
+        @Override
+        public void contentRemoved(ContentManagerEvent contentManagerEvent) {
+        }
+
+        @Override
+        public void contentRemoveQuery(ContentManagerEvent contentManagerEvent) {
+        }
+
+        @Override
+        public void selectionChanged(ContentManagerEvent contentManagerEvent) {
+            Content content = contentManagerEvent.getContent();
+            if(content.getDisplayName().equals(currentContent)){
+                return ;
+            }
+            currentContent = content.getDisplayName();
+            if(content.getDisplayName().equals(BETA)){
+                currentBugtagApp = app_beta;
+            }else{
+                currentBugtagApp = app_live;
+            }
+            initComponent();
+            loadPage();
+            loadVersion();
         }
     };
 }
