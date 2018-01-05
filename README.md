@@ -18,7 +18,7 @@
    1. 在simpleBugtag界面点击checkbox可以进行标签类型和标签状态的筛选,点击下拉列表可以进行排序
    2. 最上方的beta和live用于切换环境,beta代表测试环境,live代表线上环境
    3. 点击右下角的<>用于分页查看
-   4. 双击item可以跳往Info tab,首次进入可以不会加载堆栈信息,左右滑动下tab就行
+   4. 双击item可以跳往Info tab
    5. info界面可以查看堆栈信息、重现步骤、用户数据、控制台日志、bugtag日志、Anr日志和截图其中控制台日志可以根据level进行筛选
    ![info界面](mdres/infoimg.png)
    6. 在该界面点击右键会返回到Simplebugtag界面

@@ -518,7 +518,7 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
                 }
                 myToolWindow.hide(null);
                 ToolWindow toolWindow = ToolWindowManager.getInstance(mProject).getToolWindow("Info");
-                toolWindow.show(new Runnable() {
+                toolWindow.activate(new Runnable() {
                     @Override
                     public void run() {
                         IssueInfo info = mIssueInfos.get(index);
