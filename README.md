@@ -9,7 +9,7 @@
       ![cookie](mdres/cookieimg.png)
    3. 打开Android Studio 选中File下面的Setting
    4. 选择Bugtag选项
-   5. 在右侧输入你自己的Bugtag账号的cookie,点击确定
+   5. 在右侧输入你自己的Bugtag账号的cookie,点击
    ![设置界面](mdres/settingimg.png)
    6. 打开simpleBugtag tab
    ![simpleBugtag](mdres/simpleBugtag.png)
