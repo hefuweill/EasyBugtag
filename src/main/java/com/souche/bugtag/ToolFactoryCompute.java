@@ -1,5 +1,6 @@
 package com.souche.bugtag;
 
+import com.intellij.openapi.options.ShowSettingsUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.wm.ToolWindow;
@@ -13,6 +14,7 @@ import com.souche.bugtag.api.model.*;
 import com.souche.bugtag.api.service.APIManager;
 import com.souche.bugtag.utils.SettingUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import retrofit2.Call;
 import retrofit2.Response;
 
@@ -50,7 +52,6 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
     private APIManager manager;
     private Project mProject;
     private static OnShowTextListener mListener;
-    private int preIndex = -1; //防止重复加载
     private int currentPage = 1;
     private BugtagAPP currentBugtagApp;
     private boolean isNeedJump = true;
@@ -82,11 +83,20 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
     private List<IssueInfo> mIssueInfos;
     private List<List<BugtagAPP>> projects;
     private boolean isInitComponent = false;//初始化组件屏蔽事件响应
+    private Vector<String> vector_sub;
+    private Vector<String> vector_complete;
 
 
     @Override
     public void createToolWindowContent(@NotNull Project project,
                                         @NotNull ToolWindow toolWindow) {
+        ToolFactoryCompute myToolWindowFactory = new ToolFactoryCompute();
+        myToolWindowFactory.process(project,toolWindow);//开启多个window的时候不会只显示一个
+    }
+
+
+    private void process(Project project, ToolWindow toolWindow){
+        mCb_sort.setModel(new DefaultComboBoxModel(sortTypeName));
         myToolWindow = toolWindow;
         mProject = project;
         //检测新版本
@@ -97,7 +107,10 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
         mScrollPane.getViewport().setOpaque(false);
         String cookie = SettingUtils.getInstance().getCookie();
         if(cookie == null || "".equals(cookie)){
-            Messages.showMessageDialog(project, "请先前往Setting界面设置Cookie", "Information", Messages.getInformationIcon());
+            int index = Messages.showDialog(project, "请先前往Setting界面设置Cookie", "提示", new String[]{"取消","确定"}, 1, Messages.getInformationIcon());
+            if(index == 1){
+                ShowSettingsUtil.getInstance().editConfigurable(mProject, Setting.getInstance());
+            }
             return ;
         }
         initData(cookie);
@@ -255,6 +268,7 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
                 System.out.println("执行");
                 initComponent();
                 initTab(mCb_project.getSelectedIndex());
+                mCb_project.setModel(new DefaultComboBoxModel(vector_sub));
             }
         });
         mCb_exception.addItemListener(this);
@@ -313,8 +327,16 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
                 projects.add(apps);
             }
         }
-        Vector<String> vector = new Vector<>(alreadyProjectName);
-        mCb_project.setModel(new DefaultComboBoxModel(vector));
+        vector_sub = new Vector<>();
+        for(String str:alreadyProjectName){
+            if(str.length()>3){
+                vector_sub.add(str.substring(0,3));
+            }else{
+                vector_sub.add(str);
+            }
+        }
+        vector_complete = new Vector<>(alreadyProjectName);
+        mCb_project.setModel(new DefaultComboBoxModel(vector_complete));
     }
 
     private void initComponent() {
@@ -374,7 +396,6 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
 
     private void loadPage() {
         try{
-            preIndex = -1;
             Call<BaseMessage<PageInfo<IssueInfo>>> issues;
             if(isSearch){
                 issues = manager.getBugtagAPI().issuesSearch(currentBugtagApp.app_id, currentPage,
@@ -386,6 +407,9 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
             Response<BaseMessage<PageInfo<IssueInfo>>> response = issues.execute();
             System.out.println(issues.request().url());
             handleResponse(response);
+            if(mScrollPane.getVerticalScrollBar()!=null){
+                mScrollPane.getVerticalScrollBar().setValue(0);
+            }
             loadTotalCount();
         }catch (Exception e){
             e.printStackTrace();
@@ -414,11 +438,16 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
     @Override
     public void init(ToolWindow window) {
         System.out.println("init");
-        mCb_sort.setModel(new DefaultComboBoxModel(sortTypeName));
     }
 
     private void createUIComponents() {
-        // TODO: place custom component creation code here
+        mCb_project = new JComboBox(){
+            @Nullable
+            @Override
+            public Object getSelectedItem() {
+                return super.getSelectedItem();
+            }
+        };
     }
 
     public static void setOnShowTextListener(OnShowTextListener listener){
@@ -513,10 +542,9 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
             if (e.getClickCount() == 2) {
                 JList list = (JList) e.getSource();
                 int index = list.getLeadSelectionIndex();
-                if (preIndex == index) {
-                    return;
-                }
-                myToolWindow.hide(null);
+                try{
+                    myToolWindow.hide(null);
+                }catch (Exception ex){ex.printStackTrace();}
                 ToolWindow toolWindow = ToolWindowManager.getInstance(mProject).getToolWindow("Info");
                 toolWindow.activate(new Runnable() {
                     @Override
@@ -527,7 +555,6 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
                         }
                     }
                 });
-                preIndex = index;
             }
         }
     };

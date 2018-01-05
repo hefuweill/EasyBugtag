@@ -55,9 +55,50 @@ public class StackTraceCompute implements ToolWindowFactory, OnShowTextListener 
     private IssueInfo issue;
     private String[] levels = {"Verbose","Debug","Info","Warn","Error"};
 
-
+    @Override
     public void createToolWindowContent(@NotNull Project project,
                                         @NotNull ToolWindow toolWindow) {
+        StackTraceCompute mStackTraceCompute = new StackTraceCompute();
+        mStackTraceCompute.process(project,toolWindow);
+    }
+
+    private void process(Project project, ToolWindow toolWindow){
+        ToolFactoryCompute.setOnShowTextListener(this);
+        mDetail.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if(e.getButton() == MouseEvent.BUTTON3){
+                    myToolWindow.hide(new Runnable() {
+                        @Override
+                        public void run() {
+
+                        }
+                    });
+                    ToolWindowManager.getInstance(mProject).getToolWindow("SimpleBugtag").show(new Runnable() {
+                        @Override
+                        public void run() {
+
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+            }
+        });
         myToolWindow = toolWindow;
         mProject = project;
         initContent();
@@ -298,42 +339,7 @@ public class StackTraceCompute implements ToolWindowFactory, OnShowTextListener 
 
     @Override
     public void init(ToolWindow window) {
-        ToolFactoryCompute.setOnShowTextListener(this);
-        mDetail.addMouseListener(new MouseListener() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if(e.getButton() == MouseEvent.BUTTON3){
-                    myToolWindow.hide(new Runnable() {
-                        @Override
-                        public void run() {
 
-                        }
-                    });
-                    ToolWindowManager.getInstance(mProject).getToolWindow("SimpleBugtag").show(new Runnable() {
-                        @Override
-                        public void run() {
-
-                        }
-                    });
-                }
-            }
-
-            @Override
-            public void mousePressed(MouseEvent e) {
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-            }
-
-            @Override
-            public void mouseEntered(MouseEvent e) {
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-            }
-        });
     }
 
     @Override

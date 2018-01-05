@@ -2,7 +2,7 @@
     <id>com.souche.bugtag.plugin.bugtag</id>
     <name>SoucheBugtag</name>
     <version>0.0.1</version>
-    <vendor email="hefuwei@souche.com" url="http://www.yourcompany.com">大搜车</vendor>
+    <vendor email="hefuwei@souche.com" url="http://git.souche.com/hefuwei/bugtagPlugin">大搜车</vendor>
 
     <description>查看Bugtag相关内容</description>
     <idea-version since-build="162.3871" until-build="173.*"/>

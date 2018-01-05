@@ -13,8 +13,6 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.net.URL;
 
 public class Setting implements Configurable {
@@ -25,7 +23,15 @@ public class Setting implements Configurable {
     private boolean isModify;
     private String mSavedCookie;
     private static OnSettingApplyListener mListener;
+    private static Setting mSetting = new Setting();
 
+    private Setting(){
+
+    }
+
+    public static Setting getInstance(){
+        return mSetting;
+    }
     @Nls
     @Override
     public String getDisplayName() {
@@ -54,6 +60,7 @@ public class Setting implements Configurable {
 
         mTv.setLineWrap(true);        //激活自动换行功能
         mTv.setWrapStyleWord(true);
+        mTv.setToolTipText("请输入bugtag的cookie!");
         mTv.setText(mSavedCookie);
         mTv.getDocument().addDocumentListener(new DocumentListener() {
             @Override

@@ -91,6 +91,7 @@
           <component id="c9cb6" class="javax.swing.JLabel">
             <constraints/>
             <properties>
+              <font size="14"/>
               <text value="类型:"/>
             </properties>
           </component>
@@ -118,6 +119,7 @@
           <component id="64a99" class="javax.swing.JLabel">
             <constraints/>
             <properties>
+              <focusable value="false"/>
               <text value="状态:"/>
             </properties>
           </component>
@@ -191,9 +193,12 @@
               <text value="项目:"/>
             </properties>
           </component>
-          <component id="f0a81" class="javax.swing.JComboBox" binding="mCb_project">
+          <component id="f0a81" class="javax.swing.JComboBox" binding="mCb_project" custom-create="true">
             <constraints/>
-            <properties/>
+            <properties>
+              <maximumSize width="20" height="20"/>
+              <minimumSize width="20" height="20"/>
+            </properties>
           </component>
         </children>
       </grid>
