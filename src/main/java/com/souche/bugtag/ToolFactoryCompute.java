@@ -518,7 +518,6 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
                 }
                 myToolWindow.hide(null);
                 ToolWindow toolWindow = ToolWindowManager.getInstance(mProject).getToolWindow("Info");
-                boolean flag = toolWindow instanceof StackTraceCompute;
                 toolWindow.show(new Runnable() {
                     @Override
                     public void run() {
