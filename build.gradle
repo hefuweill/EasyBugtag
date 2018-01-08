@@ -51,7 +51,7 @@ publishPlugin {
 }
 patchPluginXml {
     changeNotes "添加了排序方式"
-    version '0.0.2'
+    version '0.0.3'
 }
 
 version patchPluginXml.version//放在patchPlugin后面才会生效  会在生成的jar包文件名后面添加上该字段

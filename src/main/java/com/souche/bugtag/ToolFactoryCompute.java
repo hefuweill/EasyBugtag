@@ -83,8 +83,6 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
     private List<IssueInfo> mIssueInfos;
     private List<List<BugtagAPP>> projects;
     private boolean isInitComponent = false;//初始化组件屏蔽事件响应
-    private Vector<String> vector_sub;
-    private Vector<String> vector_complete;
 
 
     @Override
@@ -268,7 +266,6 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
                 System.out.println("执行");
                 initComponent();
                 initTab(mCb_project.getSelectedIndex());
-                mCb_project.setModel(new DefaultComboBoxModel(vector_sub));
             }
         });
         mCb_exception.addItemListener(this);
@@ -327,15 +324,7 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
                 projects.add(apps);
             }
         }
-        vector_sub = new Vector<>();
-        for(String str:alreadyProjectName){
-            if(str.length()>3){
-                vector_sub.add(str.substring(0,3));
-            }else{
-                vector_sub.add(str);
-            }
-        }
-        vector_complete = new Vector<>(alreadyProjectName);
+        Vector<String> vector_complete = new Vector<>(alreadyProjectName);
         mCb_project.setModel(new DefaultComboBoxModel(vector_complete));
     }
 
