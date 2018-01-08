@@ -47,14 +47,13 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
     private JCheckBox mCb_nothandle;
     private JCheckBox mCb_close;
     private JComboBox mCb;
-    private JComboBox mCb_sort;
-    private JComboBox mCb_project;
+    private JComboBox<String> mCb_sort;
+    private JComboBox<String> mCb_project;
     private APIManager manager;
     private Project mProject;
     private static OnShowTextListener mListener;
     private int currentPage = 1;
     private BugtagAPP currentBugtagApp;
-    private boolean isNeedJump = true;
     private final String BETA = "Beta";
     private final String LIVE = "Live";
     private String currentContent = BETA;
@@ -92,9 +91,8 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
         myToolWindowFactory.process(project,toolWindow);//开启多个window的时候不会只显示一个
     }
 
-
     private void process(Project project, ToolWindow toolWindow){
-        mCb_sort.setModel(new DefaultComboBoxModel(sortTypeName));
+        mCb_sort.setModel(new DefaultComboBoxModel<String>(sortTypeName));
         myToolWindow = toolWindow;
         mProject = project;
         //检测新版本
@@ -122,7 +120,7 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
             Call<BaseMessage<NewVersion>> call = APIManager.getInstance().getPluginAPI().checkNewVersion("{}");
             Response<BaseMessage<NewVersion>> resp = call.execute();
             if(resp.isSuccessful()) {
-                if(!version.equals(resp.body().data.versionName)){
+                if(resp.body() != null && !version.equals(resp.body().data.versionName)){
                     String savedVersionName = SettingUtils.getInstance().getVersion();
                     if(resp.body().data.versionName.equals(savedVersionName)){
                         return ;
@@ -183,7 +181,6 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
         mBt_left.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                isNeedJump = false;
                 if(e.getSource() == mBt_left){
                     if(currentPage > 1){
                         currentPage -= 1;
@@ -193,14 +190,12 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
                         mBt_right.setEnabled(true);
                         loadPage();
                     }
-                    isNeedJump = true;
                 }
             }
         });
         mBt_right.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                isNeedJump = false;
                 if(e.getSource() == mBt_right){
                     int maxPage = totalCount / 20 + 1;
                     if(currentPage < maxPage){
@@ -212,7 +207,6 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
                     if(currentPage == maxPage){
                         mBt_right.setEnabled(false);
                     }
-                    isNeedJump = true;
                 }
             }
         });
@@ -406,7 +400,6 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
     }
 
     private void initIssusInfos(BugtagAPP app){
-        isNeedJump = false;
         mList.removeMouseListener(mouseAdapter);
         mList.setModel(new AbstractListModel() {
             @Override
@@ -421,7 +414,6 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
         });
         mList.addMouseListener(mouseAdapter);
         mList.setCellRenderer(new MyCellRender());
-        isNeedJump = true;
     }
 
     @Override
