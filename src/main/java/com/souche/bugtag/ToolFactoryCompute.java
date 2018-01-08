@@ -32,7 +32,7 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
     private ToolWindow myToolWindow;
     private JPanel mSpanel;
     private JScrollPane mScrollPane;
-    private JList mList;
+    private JList<IssueInfo> mList;
     private JButton mBt_left;
     private JButton mBt_right;
     private JEditorPane mEt_desc;
@@ -46,7 +46,7 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
     private JCheckBox mCb_suspension;
     private JCheckBox mCb_nothandle;
     private JCheckBox mCb_close;
-    private JComboBox mCb;
+    private JComboBox<String> mCb;
     private JComboBox<String> mCb_sort;
     private JComboBox<String> mCb_project;
     private APIManager manager;
@@ -92,7 +92,7 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
     }
 
     private void process(Project project, ToolWindow toolWindow){
-        mCb_sort.setModel(new DefaultComboBoxModel<String>(sortTypeName));
+        mCb_sort.setModel(new DefaultComboBoxModel<>(sortTypeName));
         myToolWindow = toolWindow;
         mProject = project;
         //检测新版本
@@ -105,7 +105,7 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
         if(cookie == null || "".equals(cookie)){
             int index = Messages.showDialog(project, "请先前往Setting界面设置Cookie", "提示", new String[]{"取消","确定"}, 1, Messages.getInformationIcon());
             if(index == 1){
-                ShowSettingsUtil.getInstance().editConfigurable(mProject, Setting.getInstance());
+                ShowSettingsUtil.getInstance().editConfigurable(project, Setting.getInstance());
             }
             return ;
         }
@@ -120,20 +120,21 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
             Call<BaseMessage<NewVersion>> call = APIManager.getInstance().getPluginAPI().checkNewVersion("{}");
             Response<BaseMessage<NewVersion>> resp = call.execute();
             if(resp.isSuccessful()) {
-                if(resp.body() != null && !version.equals(resp.body().data.versionName)){
+                BaseMessage<NewVersion> body = resp.body();
+                if(body != null && !version.equals(body.data.versionName)){
                     String savedVersionName = SettingUtils.getInstance().getVersion();
-                    if(resp.body().data.versionName.equals(savedVersionName)){
+                    if(body.data.versionName.equals(savedVersionName)){
                         return ;
                     }
-                    int index = Messages.showDialog(resp.body().data.desc, resp.body().data.title, new String[]{"取消","跳过该版本","去更新"}, 2, null);
+                    int index = Messages.showDialog(body.data.desc, body.data.title, new String[]{"取消","跳过该版本","去更新"}, 2, null);
                     if(index == 2){
                         try {
-                            Desktop.getDesktop().browse(new URL(resp.body().data.url).toURI());
+                            Desktop.getDesktop().browse(new URL(body.data.url).toURI());
                         } catch (URISyntaxException e) {
                             e.printStackTrace();
                         }
                     }else if(index == 1){
-                        SettingUtils.getInstance().saveVersion(resp.body().data.versionName);
+                        SettingUtils.getInstance().saveVersion(body.data.versionName);
                     }
                 }
             }
@@ -178,89 +179,74 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
         if(Integer.parseInt(currentBugtagApp.issue_num) / 20 + 1 <= 1){
             mBt_right.setEnabled(true);
         }
-        mBt_left.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if(e.getSource() == mBt_left){
-                    if(currentPage > 1){
-                        currentPage -= 1;
-                        if(currentPage <= 1){
-                            mBt_left.setEnabled(false);
-                        }
-                        mBt_right.setEnabled(true);
-                        loadPage();
+        mBt_left.addActionListener(e -> {
+            if(e.getSource() == mBt_left){
+                if(currentPage > 1){
+                    currentPage -= 1;
+                    if(currentPage <= 1){
+                        mBt_left.setEnabled(false);
                     }
-                }
-            }
-        });
-        mBt_right.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if(e.getSource() == mBt_right){
-                    int maxPage = totalCount / 20 + 1;
-                    if(currentPage < maxPage){
-                        mBt_left.setEnabled(true);
-                        mBt_right.setEnabled(true);
-                        currentPage++;
-                        loadPage();
-                    }
-                    if(currentPage == maxPage){
-                        mBt_right.setEnabled(false);
-                    }
-                }
-            }
-        });
-        mCb_sort.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if(!isInitComponent) {
-                    currentSortType = mCb_sort.getSelectedIndex();
-                    currentPage = 1;
-                    mBt_left.setEnabled(false);
-                    mBt_right.setEnabled(true);
-                    if (currentSortType >= 3) {
-                        isSearch = true;
-                    } else {
-                        isSearch = false;
-                    }
-                    loadPage();
-                }
-            }
-        });
-        mCb.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if(isInitComponent){
-                   return ;
-                }
-                if(map!=null){
-                    if(versions == null){
-                        versions = new ArrayList<>();
-                    }
-                    versions.clear();
-                    Map<String, String> versionChildren = map.get((String) mCb.getSelectedItem());
-                    if(versionChildren != null){//不过滤的情况
-                        for(Map.Entry<String,String> entry:versionChildren.entrySet()){
-                            versions.add(entry.getValue());
-                        }
-                    }
-                    currentPage = 1;
-                    mBt_left.setEnabled(false);
                     mBt_right.setEnabled(true);
                     loadPage();
                 }
             }
         });
-        mCb_project.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                currentBugtagApp = projects.get(mCb_project.getSelectedIndex()).get(0);
-                myToolWindow.getContentManager().removeContentManagerListener(listener);
-                myToolWindow.getContentManager().removeAllContents(true);
-                System.out.println("执行");
-                initComponent();
-                initTab(mCb_project.getSelectedIndex());
+        mBt_right.addActionListener(e -> {
+            if(e.getSource() == mBt_right){
+                int maxPage = totalCount / 20 + 1;
+                if(currentPage < maxPage){
+                    mBt_left.setEnabled(true);
+                    mBt_right.setEnabled(true);
+                    currentPage++;
+                    loadPage();
+                }
+                if(currentPage == maxPage){
+                    mBt_right.setEnabled(false);
+                }
             }
+        });
+        mCb_sort.addActionListener(e -> {
+            if(!isInitComponent) {
+                currentSortType = mCb_sort.getSelectedIndex();
+                currentPage = 1;
+                mBt_left.setEnabled(false);
+                mBt_right.setEnabled(true);
+                if (currentSortType >= 3) {
+                    isSearch = true;
+                } else {
+                    isSearch = false;
+                }
+                loadPage();
+            }
+        });
+        mCb.addActionListener(e -> {
+            if(isInitComponent){
+               return ;
+            }
+            if(map!=null){
+                if(versions == null){
+                    versions = new ArrayList<>();
+                }
+                versions.clear();
+                Map<String, String> versionChildren = map.get(mCb.getSelectedItem());
+                if(versionChildren != null){//不过滤的情况
+                    for(Map.Entry<String,String> entry:versionChildren.entrySet()){
+                        versions.add(entry.getValue());
+                    }
+                }
+                currentPage = 1;
+                mBt_left.setEnabled(false);
+                mBt_right.setEnabled(true);
+                loadPage();
+            }
+        });
+        mCb_project.addActionListener(e -> {
+            currentBugtagApp = projects.get(mCb_project.getSelectedIndex()).get(0);
+            myToolWindow.getContentManager().removeContentManagerListener(listener);
+            myToolWindow.getContentManager().removeAllContents(true);
+            System.out.println("执行");
+            initComponent();
+            initTab(mCb_project.getSelectedIndex());
         });
         mCb_exception.addItemListener(this);
         mCb_bengkui.addItemListener(this);
@@ -283,7 +269,7 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
     }
     private void initTab(int index){
         currentBugtagApp = projects.get(index).get(0);
-        String actionName = "";
+        String actionName;
         for (int i=0;i<projects.get(index).size();i++){
             ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
             if(i == 0){
@@ -306,9 +292,7 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
         projects = new ArrayList<>();
         List<String> alreadyProjectName = new ArrayList<>();
         for(BugtagAPP app:body.data){
-            if(alreadyProjectName.contains(app.name)){
-                continue ;
-            }else{
+            if(!alreadyProjectName.contains(app.name)){
                 alreadyProjectName.add(app.name);
                 List<BugtagAPP> apps = new ArrayList<>();
                 apps.add(app);
@@ -319,7 +303,7 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
             }
         }
         Vector<String> vector_complete = new Vector<>(alreadyProjectName);
-        mCb_project.setModel(new DefaultComboBoxModel(vector_complete));
+        mCb_project.setModel(new DefaultComboBoxModel<>(vector_complete));
     }
 
     private void initComponent() {
@@ -355,12 +339,7 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
                     if(body.isSuccess()){
                         Vector<String> vector = new Vector<>();
                         //转换为有序的map
-                        map = new TreeMap<>(new Comparator<String>() {
-                            @Override
-                            public int compare(String o1, String o2) {
-                                return o2.compareTo(o1);
-                            }
-                        });
+                        map = new TreeMap<>(Comparator.reverseOrder());
                         for(Map.Entry<String,Map<String,String>> entry:body.getData().entrySet()){
                             map.put(entry.getKey(),entry.getValue());
                         }
@@ -368,7 +347,7 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
                         for(Map.Entry<String,Map<String,String>> entry: map.entrySet()){
                             vector.add(entry.getKey());
                         }
-                        mCb.setModel(new DefaultComboBoxModel<String>(vector));
+                        mCb.setModel(new DefaultComboBoxModel<>(vector));
                     }
                 }
             }
@@ -399,9 +378,9 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
         }
     }
 
-    private void initIssusInfos(BugtagAPP app){
+    private void initIssusInfos(){
         mList.removeMouseListener(mouseAdapter);
-        mList.setModel(new AbstractListModel() {
+        mList.setModel(new AbstractListModel<IssueInfo>() {
             @Override
             public int getSize() {
                 return mIssueInfos.size();
@@ -413,7 +392,7 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
             }
         });
         mList.addMouseListener(mouseAdapter);
-        mList.setCellRenderer(new MyCellRender());
+        mList.setCellRenderer(new MyCellRender<IssueInfo>());
     }
 
     @Override
@@ -422,7 +401,7 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
     }
 
     private void createUIComponents() {
-        mCb_project = new JComboBox(){
+        mCb_project = new JComboBox<String>(){
             @Nullable
             @Override
             public Object getSelectedItem() {
@@ -493,7 +472,7 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
                     }
                     mIssueInfos.clear();
                     mIssueInfos.addAll(body.getData().list);
-                    initIssusInfos(currentBugtagApp);
+                    initIssusInfos();
                 }
             }
         }
@@ -527,13 +506,10 @@ public class ToolFactoryCompute implements ToolWindowFactory, OnSettingApplyList
                     myToolWindow.hide(null);
                 }catch (Exception ex){ex.printStackTrace();}
                 ToolWindow toolWindow = ToolWindowManager.getInstance(mProject).getToolWindow("Info");
-                toolWindow.activate(new Runnable() {
-                    @Override
-                    public void run() {
-                        IssueInfo info = mIssueInfos.get(index);
-                        if (mListener != null && mListener instanceof StackTraceCompute) {
-                            mListener.onShowText(manager, info, currentBugtagApp.app_id);
-                        }
+                toolWindow.activate(() -> {
+                    IssueInfo info = mIssueInfos.get(index);
+                    if (mListener != null && mListener instanceof StackTraceCompute) {
+                        mListener.onShowText(manager, info, currentBugtagApp.app_id);
                     }
                 });
             }

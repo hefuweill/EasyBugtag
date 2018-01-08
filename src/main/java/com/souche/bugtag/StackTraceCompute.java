@@ -13,6 +13,7 @@ import com.souche.bugtag.api.service.APIManager;
 import com.souche.bugtag.utils.OpenFileUtils;
 import com.souche.bugtag.utils.SourceDetail;
 import okhttp3.Request;
+import okhttp3.ResponseBody;
 import org.apache.commons.collections.map.LRUMap;
 import org.jetbrains.annotations.NotNull;
 import retrofit2.Call;
@@ -20,7 +21,6 @@ import retrofit2.Response;
 
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
-import javax.swing.event.HyperlinkListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -36,7 +36,7 @@ public class StackTraceCompute implements ToolWindowFactory, OnShowTextListener 
     private JPanel mPanel;
     private JScrollPane mScrollPane;
     private JEditorPane mDetail;
-    private JComboBox mCb;
+    private JComboBox<String> mCb;
     private Project mProject;
     private Content content;
     private String appId;
@@ -68,17 +68,9 @@ public class StackTraceCompute implements ToolWindowFactory, OnShowTextListener 
             @Override
             public void mouseClicked(MouseEvent e) {
                 if(e.getButton() == MouseEvent.BUTTON3){
-                    myToolWindow.hide(new Runnable() {
-                        @Override
-                        public void run() {
+                    myToolWindow.hide(() -> {});
+                    ToolWindowManager.getInstance(mProject).getToolWindow("SimpleBugtag").show(() -> {
 
-                        }
-                    });
-                    ToolWindowManager.getInstance(mProject).getToolWindow("SimpleBugtag").show(new Runnable() {
-                        @Override
-                        public void run() {
-
-                        }
                     });
                 }
             }
@@ -109,7 +101,7 @@ public class StackTraceCompute implements ToolWindowFactory, OnShowTextListener 
         mPanel.setOpaque(false);
         mScrollPane.setOpaque(false);
         mScrollPane.getViewport().setOpaque(false);
-        mCb.setModel(new DefaultComboBoxModel(levels));
+        mCb.setModel(new DefaultComboBoxModel<>(levels));
         ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
         content = contentFactory.createContent(mPanel, STACKTRACE, false);
         Content content_review = contentFactory.createContent(mPanel, REVIEW, false);
@@ -193,22 +185,34 @@ public class StackTraceCompute implements ToolWindowFactory, OnShowTextListener 
                     }
                     okhttp3.Response resp = manager.getClient().newCall(new Request.Builder().url(url)
                             .get().build()).execute();
-                    String text = "";
-                    if(name.equals(STACKTRACE)){
-                        text = parseString(resp.body().string());
-                    }else if(name.equals(REVIEW)){
-                        text = parseUserStepsString(resp.body().string());
-                    }else if(name.equals(CONSOLELOG)){
-                        text = parseConsoleString(resp.body().string());
-                    }else if(name.equals(SNAPSHOT)){
-                        text = parseImageString(url);
-                    }else{
-                        text = resp.body().string().replace("\n","<br />");
+                    ResponseBody body = resp.body();
+                    if(body != null){
+                        String text = "";
+                        switch (name) {
+                            case STACKTRACE:
+                                text = parseString(body.string());
+                                break;
+                            case REVIEW:
+                                text = parseUserStepsString(body.string());
+                                break;
+                            case CONSOLELOG:
+                                text = parseConsoleString(body.string());
+                                break;
+                            case SNAPSHOT:
+                                text = parseImageString(url);
+                                break;
+                            default:
+                                ResponseBody bodychild = resp.body();
+                                if(bodychild != null){
+                                    text = body.string().replace("\n", "<br />");
+                                }
+                                break;
+                        }
+                        mDetail.setText(text);
+                        mDetail.setCaretPosition(0);
+                        tabMap.put(name,text);
+                        body.close();
                     }
-                    mDetail.setText(text);
-                    mDetail.setCaretPosition(0);
-                    tabMap.put(name,text);
-                    resp.body().close();
                 }catch (Exception e){
                     e.printStackTrace();
                 }finally {
@@ -218,13 +222,10 @@ public class StackTraceCompute implements ToolWindowFactory, OnShowTextListener 
                 }
             }
         });
-        mCb.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                int level = mCb.getSelectedIndex();
-                mDetail.setText(getLevelText(level));
-                mDetail.setCaretPosition(0);
-            }
+        mCb.addActionListener(e -> {
+            int level = mCb.getSelectedIndex();
+            mDetail.setText(getLevelText(level));
+            mDetail.setCaretPosition(0);
         });
     }
 
@@ -232,28 +233,28 @@ public class StackTraceCompute implements ToolWindowFactory, OnShowTextListener 
         Map<String,String> tabMap = (Map<String, String>) map.get(issue.id);
         String content = tabMap.get(CONSOLELOG);
         String rows[] = content.split("<br />");
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for(String row:rows) {
             String tag = row.split(">")[1].split(" ")[2].substring(0, 1);
             switch (level){
                 case 0://Verbose
-                    sb.append(row+"<br />");
+                    sb.append(row).append("<br />");
                     break;
                 case 1://Debug
                     if(!tag.equals("V"))
-                        sb.append(row+"<br />");
+                        sb.append(row).append("<br />");
                     break;
                 case 2://Info
                     if(!tag.equals("V")&&!tag.equals("D"))
-                        sb.append(row+"<br />");
+                        sb.append(row).append("<br />");
                     break;
                 case 3://Warn
                     if(tag.equals("W")||tag.equals("E"))
-                        sb.append(row+"<br />");
+                        sb.append(row).append("<br />");
                     break;
                 case 4://Error
                     if(tag.equals("E"))
-                        sb.append(row+"<br />");
+                        sb.append(row).append("<br />");
                     break;
             }
         }
@@ -261,12 +262,11 @@ public class StackTraceCompute implements ToolWindowFactory, OnShowTextListener 
     }
 
     private String parseImageString(String url){
-        System.out.println(url);
         return "<img src="+url+" width=330 height=600></img>";
     }
 
     private String parseConsoleString(String data) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         String rows[] = data.split("\n");
         for(String str:rows){
             String level = str.split(" ")[2].substring(0,1);
@@ -295,18 +295,18 @@ public class StackTraceCompute implements ToolWindowFactory, OnShowTextListener 
 
     private String parseUserStepsString(String data) {
         try{
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             String rows[] = data.split("\n");
             for(String str:rows){
                 String[] split = str.split(" ");
-                sb.append(split[0]+" "+split[1]+"<br />");//设置时间
+                sb.append(split[0]).append(" ").append(split[1]).append("<br />");//设置时间
                 String className = split[2].replace(":","");
                 String href = "http://" + className.substring(0,className.lastIndexOf("."))
                         + "/" + className.substring(className.lastIndexOf(".")+1)+".java?" + "1";
                 if(isFileExist(new URL(href))){
-                    sb.append("<a href="+ href +">"+className+"</a><br />");
+                    sb.append("<a href=").append(href).append(">").append(className).append("</a><br />");
                 }else{
-                    sb.append(className+"<br />");
+                    sb.append(className).append("<br />");
                 }
                 for(int i=3;i<split.length;i++){
                     sb.append(split[i]);
@@ -322,16 +322,13 @@ public class StackTraceCompute implements ToolWindowFactory, OnShowTextListener 
     private void initDetail() {
         mDetail.setEditable(false);
         mDetail.setContentType("text/html");
-        mDetail.addHyperlinkListener(new HyperlinkListener() {
-            @Override
-            public void hyperlinkUpdate(HyperlinkEvent e) {
-                if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-                    System.out.println(e.getURL());
-                    try {
-                        openFileFromLink(e.getURL());
-                    } catch (Throwable var5) {
-                        var5.printStackTrace();
-                    }
+        mDetail.addHyperlinkListener((e) -> {
+            if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+                System.out.println(e.getURL());
+                try {
+                    openFileFromLink(e.getURL());
+                } catch (Throwable var5) {
+                    var5.printStackTrace();
                 }
             }
         });
@@ -358,11 +355,14 @@ public class StackTraceCompute implements ToolWindowFactory, OnShowTextListener 
                     if (body.isSuccess()) {
                         okhttp3.Response resp = manager.getClient().newCall(new Request.Builder().url(body.data.list.get(0).occurrence_info.crash_log)
                                 .get().build()).execute();
-                        String result = parseString(resp.body().string());
-                        resp.body().close();
-                        mDetail.setText(result);
-                        mDetail.setCaretPosition(0);
-                        getIssueDetail();
+                        ResponseBody childBody = resp.body();
+                        if(childBody != null){
+                            String result = parseString(childBody.string());
+                            childBody.close();
+                            mDetail.setText(result);
+                            mDetail.setCaretPosition(0);
+                            getIssueDetail();
+                        }
                     }
                 }
             }
@@ -379,7 +379,6 @@ public class StackTraceCompute implements ToolWindowFactory, OnShowTextListener 
                 BaseMessage<IssueDetail> body = response.body();
                 if(body != null && body.isSuccess()){
                     mIssueDetail = body.getData();
-                    System.out.println("");
                 }
             }
         } catch (IOException e) {
@@ -389,33 +388,31 @@ public class StackTraceCompute implements ToolWindowFactory, OnShowTextListener 
 
     private String parseString(String text) {
         String[] rows = text.split("\n");
-        StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < rows.length; i++) {
-            String row = rows[i];
+        StringBuilder sb = new StringBuilder();
+        for (String row : rows) {
             if (!row.contains("(")) {
-                sb.append(row + "<br/>");
-                continue;
+                sb.append(row).append("<br/>");
             } else {
                 String str = row.substring(4, row.indexOf("("));
                 String[] split = str.split("\\.");
-                StringBuffer sbChild = new StringBuffer();
+                StringBuilder sbChild = new StringBuilder();
                 for (int j = 0; j < split.length - 2; j++) {
                     sbChild.append(split[j]);
                     if (j != split.length - 3) {
                         sbChild.append(".");
                     }
                 }
-                String strEnd = row.substring(row.indexOf("(")+1);
+                String strEnd = row.substring(row.indexOf("(") + 1);
                 String filename = strEnd.split(":")[0];
-                String href = "";
+                String href;
                 try {
-                    href = "http://" + sbChild.toString() + "/" + filename+"?" + strEnd.split(":")[1].replace(")", "");
+                    href = "http://" + sbChild.toString() + "/" + filename + "?" + strEnd.split(":")[1].replace(")", "");
                     for (int j = 0; j < row.length(); j++) {
                         char c = row.charAt(j);
                         sb.append(c);
                         if (c == '(' && isFileExist(new URL(href))) {
-                            sb.append("<a href=" + href + " color=blue>");
-                            for (int k = j+1; k < row.length(); k++) {
+                            sb.append("<a href=").append(href).append(" color=blue>");
+                            for (int k = j + 1; k < row.length(); k++) {
                                 sb.append(row.charAt(k));
                                 if (row.charAt(k) == ')') {
                                     sb.append("</a>");
@@ -427,7 +424,7 @@ public class StackTraceCompute implements ToolWindowFactory, OnShowTextListener 
                     }
                     sb.append("<br />");
                 } catch (Exception e) {
-
+                    e.printStackTrace();
                 }
             }
         }
@@ -435,7 +432,6 @@ public class StackTraceCompute implements ToolWindowFactory, OnShowTextListener 
     }
     private void openFileFromLink(URL link) {
         SourceDetail sd = new SourceDetail();
-        String url = link.getPath();
         sd.packageName = link.getHost();
         sd.fileName = link.getPath().replace("/","");
         sd.lineNumber = Integer.parseInt(link.getQuery());
@@ -443,7 +439,6 @@ public class StackTraceCompute implements ToolWindowFactory, OnShowTextListener 
     }
     private boolean isFileExist(URL link){
         SourceDetail sd = new SourceDetail();
-        String url = link.getPath();
         sd.packageName = link.getHost();
         sd.fileName = link.getPath().replace("/","");
         sd.lineNumber = Integer.parseInt(link.getQuery());
